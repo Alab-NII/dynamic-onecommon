@@ -13,7 +13,7 @@ Add `dynamic-onecommon/webapp` and `dynamic-onecommon/webapp/src` to your PYTHON
 export PYTHONPATH=$PYTHONPATH:~/dynamic-onecommon/webapp/src:~/dynamic-onecommon/webapp
 ```
 
-To run the web server, move to the [src](https://github.com/Alab-NII/dynamic-onecommon/tree/master/webapp/src) directory and run `run_sample.sh`. Remove `--reuse` option if you want to initialize or overwrite existing data.
+To run the web server, move to the [src](https://github.com/Alab-NII/dynamic-onecommon/tree/master/webapp/src) directory and run `run_sample.sh`. Add `--reuse` option if you do not want to initialize or overwrite existing data.
 
 By default, some URLs are password protected (username and password are both *sample*).
 
