@@ -1,0 +1,7 @@
+{
+    "diminishers": ["barely", "bit", "faintly", "hardly", "marginally", "slight", "slightly", "subtle", "subtly", "vaguely"],
+    "moderators": ["fairly", "moderately", "pretty", "quite", "rather", "somewhat"],
+    "boosters": ["distinctly", "exceedingly", "exceptionally", "extraordinarily", "extraordinary", "extreme", "extremely", "immense", "immensely", "intense", "intensely", "highly", "much", "notably", "outstandingly", "particularly", "really", "remarkably", "significant", "significantly", "super", "supreme", "supremely", "surprisingly", "tremendous", "tremendously", "very"],
+    "approximators/hedges": ["believe", "guess", "kinda", "may", "maybe", "might", "perhaps", "possible", "possibly", "presumably", "presume", "probable", "probably", "sorta", "supposably", "suppose", "think", {"0":"could", "1":"be"}, {"0":"kind", "1":"of"}, {"0":"sort", "1":"of"}, "almost", "approx", "approximate", "approximately", {"0":"look", "1":"like"}, {"0":"looks", "1":"like"}, {"0":"sound", "1":"like"}, {"0":"sounds", "1":"like"}, "mostly", "nearly", "roughly", "seem", "seems", "virtually"],
+    "maximizers": ["absolute", "absolutely", "certain", "certainly", "clear", "clearly", "complete", "completely", "definite", "definitly", "direct", "directly", "entirely", "evidently", "exact", "exactly", "immediate", "immediately", "just", "obvious", "obviously", "perfect", "perfectly", "plainly", "precise", "precisely", "pure", "purely", "sure", "surely", "totally", "truly", "undeniable", "undeniablly", "undoubtedly", "unquestionably", "utterly"]
+}

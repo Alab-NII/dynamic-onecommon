@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Worker Info</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<style>
+    th {
+        padding: 0 15px 0 15px;
+    }
+    td {
+        padding: 0 15px 0 15px;
+    }
+</style>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script> 
+</head>
+<body>
+  <table class="stat">
+    <tr>
+      <th>Worker_id: {{ worker_id }}</th>
+    </tr>
+  </table><br>
+  <table class="stat">
+    <tr>
+      <th>total chats: {{ total_chats }}</th>
+      <th>avg. outcome: {{ avg_outcome }}</th>
+      <th>avg. tokens per utterance: {{ avg_len_utterance }}</th>
+      <th>avg. duration per chat: {{ avg_duration }}</th>
+    </tr>
+  </table><br>
+  <table class="stat">
+    <tr>
+      <th>completed rate: {{ completed_rate }}%</th>
+      <th>finished rate: {{ finished_rate }}%</th>
+      <th>accepted rate: {{ accepted_rate }}%</th>
+    </tr>
+  </table><br>
+
+</body>
+
+</html>

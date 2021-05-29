@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Worker list</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<style>
+    th {
+        padding: 0 15px 0 15px;
+    }
+    td {
+        padding: 0 15px 0 15px;
+    }
+</style>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script> 
+</head>
+<body>
+  <button type="button" id="zero_active" onclick="disconnect_users()">Disconnect All Users</button> <button type="button" id="zero_active" onclick="zero_active()">Zero Active Scenarios</button> <br>
+  <span id='disconnect_user_results'></span> <span id='zero_active_result'></span> <br>
+  <table class="stat">
+    <tr>
+      <th>unique workers: {{ num_workers }}</th>
+    </tr>
+  </table><br>
+
+  <table>
+    <tr>
+      <th>Worker_id</th>
+      <th>Completed</th>
+      <th>Incompleted</th>
+      <th>Finished</th>
+      <th>Unfinished</th>
+      <th>Avg. outcome</th>
+    </tr>
+
+	{% for i in range(num_workers) %}
+	  <tr>
+      <td><a href="{{worker_base_url}}{{ worker_ids[i] }}" > {{ worker_ids[i] }} </a></td>
+      <td> {{ worker_list[worker_ids[i]]["completed"] }} </td>
+      <td> {{ worker_list[worker_ids[i]]["incompleted"] }} </td>
+      <td> {{ worker_list[worker_ids[i]]["finished"] }} </td>
+      <td> {{ worker_list[worker_ids[i]]["unfinished"] }} </td>
+      <td> {{ worker_list[worker_ids[i]]["avg_outcome"] }} </td>
+    </tr>
+	{% endfor %}
+</table>
+
+</body>
+
+</html>

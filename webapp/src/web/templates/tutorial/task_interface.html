@@ -1,0 +1,475 @@
+<html>
+   <head>
+      <title>Tutorial</title>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+      <style>
+         .clearfix {
+         overflow: auto;
+         }
+         div#top_container {
+         float:left;
+         width: 100%;
+         padding: 0px 5px 0px 15px;
+         }
+         div#left_container {
+         float:left;
+         width: 49%;
+         padding: 0px 5px 0px 15px;
+         }
+         div#right_container {
+         margin-left: 51%;
+         /*color:#004d00;*/
+         padding: 0px 15px 0px 5px;
+         width: 460px;
+         margin-top: 40px;
+         }
+         div#tutorial_container {
+         float:left;
+         padding: 5px;
+         font-size: 20px;
+         height: 55px;
+         }
+         div#footnote_container {
+         text-align: center;
+         padding: 5px;
+         }
+         div#icon {
+         padding: 10px 100px 10px 20px;
+         display: inline-block;
+         }
+         div#svg_container {
+         width: 430px;
+         }
+         div#icon {
+         padding: 10px 100px 10px 20px;
+         display: inline-block;
+         }
+         div#svg_button_group {
+         padding: 10px 0px 0px 145px;
+         font-size: 24px;
+         }
+         span#info_label {
+         padding: 15px 0px 0px 145px;
+         color: #606060;
+         font-size: 20px;
+         }
+         .svg-button {
+         color: #337ab7;
+         }
+         .svg-button:hover {
+         color: #23527c;
+         }
+         #turn_label {
+         color: black;
+         }
+         textarea#chat {
+         width: 100%;
+         cols: 100;
+         height: 25%;
+         color:#004d00;
+         font-size:14px;
+         resize:vertical;
+         text-align: left;
+         }
+         input#text {
+         width: 100%;
+         }
+         td {
+         padding: 0 15px 0 15px;
+         }
+         #instructions > p,li {
+         font-size:15px;
+         }
+         table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):not(.sorttable_nosort):after {
+         content: " \25B4\25BE"
+         }
+         table.sortable {
+         color:#004d00;
+         }
+         table { 
+         border-collapse: collapse; 
+         }
+         tr:nth-child(n) { 
+         border: solid thin;
+         }
+         #clockdiv{
+         display: inline-block;
+         font-weight: bold;
+         text-align: center;
+         font-size: 18px;
+         padding: 15px 0 15px 0;
+         }
+         #clockdiv > div{
+         display: inline-block;
+         }
+         #clockdiv div > span{
+         display: inline-block;
+         }
+         #clockdiv div > .seconds{
+         margin-left:-3px;
+         }
+         .btn {
+            padding: 3px;
+            font-size:14px;
+         }
+         .disabled{
+         pointer-events: none;
+         /*opacity: 0.5;*/
+         /*display: none;*/
+         }
+         .disabled-and-faded{
+         pointer-events: none;
+         opacity: 0.5;
+         /*display: none;*/
+         }
+         .center {
+           display: block;
+           margin-left: auto;
+           margin-right: auto;
+         }
+         .progress_buttons {
+         margin-left: 4em;
+         font-size:18px;         
+         }
+      </style>
+      <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+      <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+      <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+      <!-- Add icon library -->
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      <script type="text/javascript" charset="utf-8">
+         var counter = 0, currentTurn = 0, tutorial_counter = 0;
+         var selectTime = null, messageStartTime = null;
+         var initTime = new Date();
+         var select_time = 0; // milliseconds
+         var selections = [];
+
+         function makeSelection(selected) {
+            if(counter == 2 * currentTurn + 1) {
+              if(selectTime == null) {
+                // if no selection has been made before, log selection and save selection time
+                now = new Date();
+                  console.log(now - initTime)
+                  if(now - initTime > select_time) {
+                     selectTime = now;
+                     select(selected);
+                  }
+              }
+              else {
+                var currentTime = new Date();
+                // check if last selection was more than 5 seconds ago; selections can only be made > 10 seconds apart.
+                // If the last selection was made < 5 seconds ago, do nothing (no selection event is logged).
+                if ((currentTime - selectTime) > 5000) {
+                  select(selected);
+                  selectTime = currentTime;
+                } // otherwise do nothing
+              }
+            }
+         }
+
+         function select(selection) {
+            if(selections.length === currentTurn + 1) {
+               $('#' + selections[currentTurn] + '_marker').attr("visibility", "hidden");
+            }
+            $('#' + selection + '_marker').attr("visibility", "visible");
+            selections[currentTurn] = selection;
+            imitateSuccess();
+         }
+
+         function imitateSuccess() {
+            if (currentTurn == 0 && selections.length > 0 && tutorial_counter > 4){
+               $('#forward_button').removeClass("disabled-and-faded");
+               $('#fast_forward_button').removeClass("disabled-and-faded");
+               if(counter == 2 * currentTurn + 1){
+                  $('#info_label').text("");
+                  $('#svg_container').css({"outline": "0px dotted green"});
+               }
+               currentTurn++;
+            }
+         }         
+
+         function forward() {
+            {% for i in range(9) %}
+               if(counter == {{i}}) {
+                  $('#svg_container').html('{{forward_svgs[i] | safe}}');
+                  if({{i}} % 2 == 0) {
+                     animation_time = {{entity_move_dur_seconds}} * 1000;
+                  } else {
+                     animation_time = {{agent_move_dur_seconds}} * 1000;
+                  }
+                  setTimeout(function(){ 
+                     $('#svg_container').html('{{static_svgs[i + 1] | safe}}');
+                     $('#svg_button_group').removeClass("disabled");
+                     $('#backward_button').removeClass("disabled-and-faded");
+                     $('#fast_backward_button').removeClass("disabled-and-faded");
+                     counter++;
+                     if(counter == 2 * currentTurn + 1) {
+                        $('#forward_button').addClass("disabled-and-faded");
+                        $('#fast_forward_button').addClass("disabled-and-faded");
+                        $('#info_label').text("End of Current Turn");
+                        $('#svg_container').css({"outline": "3px dotted green"});
+                        if(selections.length === currentTurn + 1) {
+                           $('#' + selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                        }
+                     } else {
+                        $('#info_label').text("");
+                     }
+                     if (counter % 2 == 1) {
+                        $('#' + selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                     }
+                  }, animation_time);
+               }
+            {% endfor %}
+            $('#svg_button_group').addClass("disabled");
+            $('#turn_label').text('Turn ' + Math.round((counter + 2) / 2));
+            if (counter % 2 == 0) {
+               $('#info_label').text("(Dots Moving...)");
+            } else {
+               $('#info_label').text("(View Moving...)");
+            }
+         }
+
+         function fastForward() {
+            {% for i in range(9) %}
+               if(counter == {{i}}) {
+                  $('#svg_container').html('{{fast_forward_svgs[i] | safe}}');
+                  if({{i}} % 2 == 0) {
+                     animation_time = {{entity_move_dur_seconds / 2}} * 1000;
+                  } else {
+                     animation_time = {{agent_move_dur_seconds / 2}} * 1000;
+                  }
+                  setTimeout(function(){ 
+                     $('#svg_container').html('{{static_svgs[i + 1] | safe}}');
+                     $('#svg_button_group').removeClass("disabled");
+                     $('#backward_button').removeClass("disabled-and-faded");
+                     $('#fast_backward_button').removeClass("disabled-and-faded");
+                     counter++;
+                     if(counter == 2 * currentTurn + 1) {
+                        $('#forward_button').addClass("disabled-and-faded");
+                        $('#fast_forward_button').addClass("disabled-and-faded");
+                        $('#info_label').text("End of Current Turn");
+                        $('#svg_container').css({"outline": "4px dotted green"});
+                        if(selections.length === currentTurn + 1) {
+                           $('#' + selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                        }
+                     } else {
+                        $('#info_label').text("");
+                     }
+                     if (counter % 2 == 1) {
+                        $('#' + selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                     }
+                  }, animation_time);
+               }
+            {% endfor %}
+            $('#svg_button_group').addClass("disabled");
+            $('#turn_label').text('Turn ' + Math.round((counter + 2) / 2));
+            if (counter % 2 == 0) {
+               $('#info_label').text("(Dots Moving...)");
+            } else {
+               $('#info_label').text("(View Moving...)");
+            }
+         }
+
+         function backward() {
+            {% for i in range(9) %}
+               if(counter == {{i + 1}}) {
+                  $('#svg_container').html('{{backward_svgs[i] | safe}}');
+                  if({{i}} % 2 == 0) {
+                     animation_time = {{backward_entity_move_dur_seconds}} * 1000;
+                  } else {
+                     animation_time = {{backward_agent_move_dur_seconds}} * 1000;
+                  }
+                  setTimeout(function(){
+                     $('#svg_container').html('{{static_svgs[i] | safe}}');
+                     $('#svg_button_group').removeClass("disabled");
+                     $('#forward_button').removeClass("disabled-and-faded");
+                     $('#fast_forward_button').removeClass("disabled-and-faded");
+                     if(counter == 0) {
+                        $('#backward_button').addClass("disabled-and-faded");
+                        $('#fast_backward_button').addClass("disabled-and-faded");
+                     }
+                     if(counter % 2 == 1) {
+                        $('#' + selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                     }
+                  }, animation_time);
+               }
+            {% endfor %}
+            $('#svg_button_group').addClass("disabled");
+            $('#info_label').text("");
+            $('#svg_container').css({"outline": "0px dotted green"});
+            counter--;
+            $('#turn_label').text('Turn ' + Math.round((counter + 1) / 2));
+         }
+
+         function fastBackward() {
+            {% for i in range(9) %}
+               if(counter == {{i + 1}}) {
+                  $('#svg_container').html('{{fast_backward_svgs[i] | safe}}');
+                  if({{i}} % 2 == 0) {
+                     animation_time = {{backward_entity_move_dur_seconds / 2}} * 1000;
+                  } else {
+                     animation_time = {{backward_agent_move_dur_seconds / 2}} * 1000;
+                  }
+                  setTimeout(function(){ 
+                     $('#svg_container').html('{{static_svgs[i] | safe}}');
+                     $('#svg_button_group').removeClass("disabled");
+                     $('#forward_button').removeClass("disabled-and-faded");
+                     $('#fast_forward_button').removeClass("disabled-and-faded");
+                     if(counter == 0) {
+                        $('#backward_button').addClass("disabled-and-faded");
+                        $('#fast_backward_button').addClass("disabled-and-faded");
+                     }
+                     if(counter % 2 == 1) {
+                        $('#' + selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                     }
+                  }, animation_time);
+               }
+            {% endfor %}
+            $('#svg_button_group').addClass("disabled");
+            $('#info_label').text("");
+            $('#svg_container').css({"outline": "0px dotted green"});
+            counter--;
+            $('#turn_label').text('Turn ' + Math.round((counter + 1) / 2));
+         }
+
+         function next() {
+            if (tutorial_counter == 0) {
+                $('#line_1').html("2. First, please make sure to <b>read all the instructions carefully</b>.");
+                $('#instructions').css({"outline": "3px dotted blue", "outline-offset": "5px"});
+            }
+            if (tutorial_counter == 1) {
+                $('#line_1').html("3. During the game, you can use the <b>chatbox below</b> to discuss with you partner (example dialogue shown in this tutorial).");
+                $('#chat').css({"outline": "3px dotted blue", "outline-offset": "5px"});
+                $('#instructions').css({"outline": "0px dotted blue"});
+            }
+            if (tutorial_counter == 2) {
+                $('#line_1').html('4. Your view is shown on the right. You can play <b>forward</b> (<span class="svg-button glyphicon glyphicon-step-forward disabled" ></span>), <b>fast-forward</b> (<span class="svg-button glyphicon glyphicon-fast-forward disabled" ></span>) or <b>backward</b> (<span class="svg-button glyphicon glyphicon-chevron-left disabled" ></span>) to see how it changed (Try it!).');
+                $('#right_container').css({"outline": "3px dotted blue", "outline-offset": "5px"});
+                $('#chat').css({"outline": "0px dotted blue"});
+            }
+            if (tutorial_counter == 3) {
+                $('#line_1').html("5. At the <b>end of each turn</b> (<u>after the dots move</u>), you can click to select one dot in your view (Try it!).");
+            }
+            if (tutorial_counter == 4) {
+                $('#line_1').html("6. Suppose you and your partner successfully selected the same dot: then, <b>your view can move forward to the next turn</b> (Try it!).");
+            }
+            if (tutorial_counter == 5) {
+                $('#line_1').html("7. <b>Make sure you know how to use the interface</b> before moving on to the final step of our tutorial!");
+                $('#right_container').css({"outline": "0px dotted blue"});
+            }
+            if (tutorial_counter == 6) {
+                window.location.href = "{{next_page_url | safe}}";
+            }
+            tutorial_counter++;
+            imitateSuccess();
+         }
+
+         function previous() {
+            if (tutorial_counter == 0) {
+                window.location.href = "{{previous_page_url | safe}}";
+            }
+            if (tutorial_counter == 1) {
+                $('#line_1').html("1. During the game, you will play the role of one player using the <b>interface below</b>.");
+                $('#instructions').css({"outline": "0px dotted blue"});
+            }
+            if (tutorial_counter == 2) {
+                $('#line_1').html("2. First, please make sure to <b>read all the instructions carefully</b>.");
+                $('#instructions').css({"outline": "3px dotted blue", "outline-offset": "5px"});
+                $('#chat').css({"outline": "0px dotted blue"});
+            }
+            if (tutorial_counter == 3) {
+                $('#line_1').html("3. During the game, you can use the <b>chatbox below</b> to discuss with you partner (example dialogue shown in this tutorial).");
+                $('#chat').css({"outline": "3px dotted blue", "outline-offset": "5px"});
+                $('#right_container').css({"outline": "0px dotted blue"});                
+            }
+            if (tutorial_counter == 4) {
+                $('#line_1').html('4. Your view is shown on the right. You can play <b>forward</b> (<span class="svg-button glyphicon glyphicon-step-forward disabled" ></span>), <b>fast-forward</b> (<span class="svg-button glyphicon glyphicon-fast-forward disabled" ></span>) or <b>backward</b> (<span class="svg-button glyphicon glyphicon-chevron-left disabled" ></span>) to see how it changed (Try it!).');
+            }
+            if (tutorial_counter == 5) {
+                $('#line_1').html("5. At the <b>end of each turn</b> (<u>after the dots move</u>), you can click to select one dot in your view (Try selecting!).");
+            }
+            if (tutorial_counter == 6) {
+                $('#line_1').html("6. Suppose you and your partner successfully selected the same dot: then, you can move on to the next turn (Try clicking forward!).");
+                $('#right_container').css({"outline": "3px dotted blue", "outline-offset": "5px"});
+            }
+            if (tutorial_counter > 0) {
+                tutorial_counter--;
+            }
+         }
+
+
+
+      </script>
+
+
+
+   </head>
+   <body onload='init()'>
+      <div class="clearfix">
+         <div id="top_container">
+            <h1 style="color:#004d00">Tutorial</h1>
+            <div id="tutorial_container">
+               <p id="line_1" style="font-size:18px;">1. During the game, you will play the role of one player using the <b>interface below</b>.
+               </p>
+               <!--
+               <ul type="1">
+                  <li id="line_1" style="font-size:18px;">1. During the game, you will be shown the interface below to play the role of one player.</li>
+                  <li id="line_1" style="font-size:18px;">First, please read all the instructions carefully.</li>
+                  <li id="line_1" style="font-size:18px;">You can play the view foward (<span class=&quotsvg-button glyphicon glyphicon-step-forward disabled&quot ></span>), fast forward (<span class=&quotsvg-button glyphicon glyphicon-fast-forward disabled&quot ></span>) or backward (<span class=&quotsvg-button glyphicon glyphicon-chevron-left disabled&quot ></span>) to see how it changed. </li>
+                  <li id="line_1" style="font-size:18px;">To discuss with you partner, please use the chatbox below.</li>
+                  <li id="line_1" style="font-size:18px;">At the end of each turn (when your view is surrounded green), you can select one dot within your view.</li>
+                  <li id="line_1" style="font-size:18px;">If you and your partner succeed, you can move on to the next turn!</li>
+               </ul>
+               -->
+
+            </div>
+         </div>
+         <hr style="height:2px;border-width:0;color:gray;background-color:gray;width:95%;padding:0px;margin:0px 20px 0px 20px;text-align:center;">
+         <div id="left_container">
+            <div id="instructions">
+               <br clear="left">
+               <h3>Instructions &nbsp;<button type="button" id="instructionCollapse" class="btn btn-info" data-toggle="collapse"  data-target="#inner">Show/Hide</button></h3>
+              <div id="inner" class="accordion-body collapse in">
+                 {{ instructions }}
+              </div>
+            </div>
+            <textarea readonly id="chat">
+[08/15/20 12:44:33] <You entered the room.>
+[08/15/20 12:44:34] <Your partner has joined the room.>
+[08/15/20 12:44:59] You: Do you see 2 large dark dots moving up to the right, close to each other and almost in parallel?
+[08/15/20 12:45:18] Partner: No, I don't think so. I see one large light gray dot crossing my view.
+[08/15/20 12:45:32] You: Is it moving down to the left?
+[08/15/20 12:45:46] Partner: Yes, and it stopped near a a smaller darker one to its bottom right.
+[08/15/20 12:46:02] You: Ok, let's choose that large light gray dot.
+            </textarea>
+            <br><br>
+            <input id="text" placeholder="Enter your message here" spellcheck="true"><br><br>
+         </div>
+         <div id="right_container">
+            <div id="your_view">
+               <h3>Your view</h3>
+               <div id="svg_container">
+                  {{static_svgs[0] | safe}}
+               </div>
+               <div id="svg_button_group">
+                  <!--<span id="fast_backward_button" class="svg-button glyphicon glyphicon-fast-backward disabled-and-faded" onclick="fastBackward()" ></span>-->
+                  <span id="backward_button" class="svg-button glyphicon glyphicon-chevron-left disabled-and-faded" onclick="backward()" ></span>
+                  <span id="turn_label">Turn 1</span>
+                  <span id="forward_button" class="svg-button glyphicon glyphicon-step-forward" title="hover text" onclick="forward()" ></span>
+                  <span id="fast_forward_button" class="svg-button glyphicon glyphicon-fast-forward" onclick="fastForward()" ></span>
+               </div>
+               <span id="info_label"></span>
+            </div>
+         </div>
+         <br clear="left">
+         <div id="footnote_container">
+            <button type="button" id="homeButton" onclick="window.location.href='{{home_url | safe}}';" class="progress_buttons"><i class="fa fa-home"></i> Home</button>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+            <button type="button" id="previousAnimation" onclick="previous()" class="progress_buttons"><i class="fa fa-caret-left"></i> Previous</button>
+            <button type="button" id="nextAnimation" onclick="next()" class="progress_buttons">Next <i class="fa fa-caret-right"></i></button>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+         </div>
+      </div>
+   </body>
+</html>

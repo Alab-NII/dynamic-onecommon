@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Chat list</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<style>
+    th {
+        padding: 0 15px 0 15px;
+    }
+    td {
+        padding: 0 15px 0 15px;
+    }
+</style>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script> 
+<script>
+         function disconnect_users() {
+            //window.alert("{{chat_id}}");
+            $.ajax({
+               url: '{{ url_for('admin.disconnect_all')}}',
+               type: "get",
+               data: {
+               },
+               dataType: "json",
+               success: function(response) {
+                  $('#disconnect_user_results').text('Successfully disconnected all users')
+               }
+            });
+         }
+         function zero_active() {
+            //window.alert("{{chat_id}}");
+            $.ajax({
+               url: '{{ url_for('admin.zero_active')}}',
+               type: "get",
+               data: {
+               },
+               dataType: "json",
+               success: function(response) {
+                  $('#zero_active_result').text('Successfully zeroed active scenarios')
+               }
+            });
+         }
+        function accept_chat(chat_id) {
+            $.ajax({
+               url: '{{ url_for('admin.accept_chat')}}',
+               type: "get",
+               data: {
+                  "chat_id": chat_id,
+                  "review_status": "-1"
+               },
+               dataType: "json",
+               success: function(response) {
+                  $('#' + chat_id).text('accepted');
+               }
+            });
+         }
+         function reject_chat(chat_id) {
+            $.ajax({
+               url: '{{ url_for('admin.reject_chat')}}',
+               type: "get",
+               data: {
+                  "chat_id": chat_id,
+                  "review_status": "-1",
+                  "reject_message": ""
+               },
+               dataType: "json",
+               success: function(response) {
+                  $('#' + chat_id).text('rejected');
+               }
+            });
+         }
+</script>
+</head>
+<body>
+  <button type="button" id="zero_active" onclick="disconnect_users()">Disconnect All Users</button> <button type="button" id="zero_active" onclick="zero_active()">Zero Active Scenarios</button> <br>
+  <span id='disconnect_user_results'></span> <span id='zero_active_result'></span> <br>
+  <table class="stat">
+    <tr>
+      <th>completed: {{num_completed}}</th>
+      <th>incompleted: {{num_incompleted}}</th>
+      <th>finished: {{num_finished}}</th>
+      <th>unfinished: {{num_unfinished}}</th>
+    </tr>
+  </table><br>
+  <table class="stat">
+    <tr>
+      <th>accepted: {{num_accepted}}</th>
+      <th>rejected: {{num_rejected}}</th>
+      <th>not reviewed: {{num_chats - num_accepted - num_rejected}}</th>
+    </tr>
+  </table><br>
+  <table class="stat">
+    <tr>
+      <th>avg. outcome: {{avg_outcome}}</th>
+      <th>avg. utterance: {{avg_utterance}}</th>
+      <th>avg. duration: {{avg_duration}}</th>
+    </tr>
+  </table><br>
+
+  <table>
+    <tr>
+      <th>accept</th>
+      <th>reject</th>
+      <th>Chat_id</th>
+      <th>Outcome</th>
+      <th>Utterance</th>
+      <th>Duration</th>
+      <th>Review Status</th>
+      <th>Workers</th>
+      <th>Dialogue</th>
+    </tr>
+
+	{% for i in range(num_chats) %}
+	  <tr>
+      <td><button type="button" id="accept" onclick="accept_chat('{{chat_ids[i]}}')">Accept</button> <br></td>
+      <td><button type="button" id="reject" onclick="reject_chat('{{chat_ids[i]}}')">Reject</button> <br></td>
+      <td><a href="{{admin_base_url}}{{ chat_ids[i] }}" > {{ chat_ids[i] }} </a></td>
+      <td>{{ outcomes[i] }}</td>
+      <td>{{ num_utterances[i] }}</td>
+      <td>{{ durations[i] }}</td>
+      <td id="{{chat_ids[i]}}">{{ review_statuses[i] }}</td>
+      <td><a href="{{worker_base_url}}{{ worker_ids[i][0] }}" > {{ worker_ids[i][0] }} </a>/<a href="{{worker_base_url}}{{ worker_ids[i][1] }}" > {{ worker_ids[i][1] }} </a></td>
+      <td>{{ dialogues[i] }}</td>
+    </tr>
+	{% endfor %}
+</table>
+
+</body>
+
+</html>

@@ -1,0 +1,526 @@
+<html>
+   <head>
+      <title>{{ title }}</title>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+      <style>
+         .clearfix {
+         overflow: auto;
+         }
+         div#left_container {
+         float:left;
+         width: 49%;
+         padding: 0px 5px 0px 15px;
+         }
+         div#right_container {
+         margin-left: 51%;
+         /*color:#004d00;*/
+         padding: 0px 15px 0px 5px;
+         }
+         div#svg_container {
+         width: 430px;
+         }
+         div#icon {
+         padding: 10px 100px 10px 20px;
+         display: inline-block;
+         }
+         div#svg_button_group {
+         padding: 10px 0px 0px 145px;
+         font-size: 24px;
+         }
+         span#info_label {
+         padding: 15px 0px 0px 145px;
+         color: #606060;
+         font-size: 20px;
+         }
+         .svg-button {
+         color: #337ab7;
+         }
+         .svg-button:hover {
+         color: #23527c;
+         }
+         #turn_label {
+         color: black;
+         }
+         textarea#chat {
+         width: 100%;
+         cols: 100;
+         height: 25%;
+         color:#004d00;
+         font-size:14px;
+         resize:vertical;
+         }
+         input#text {
+         width: 100%;
+         }
+         td {
+         padding: 0 15px 0 15px;
+         }
+         #instructions > p,li {
+         font-size:15px;
+         }
+         table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):not(.sorttable_nosort):after {
+         content: " \25B4\25BE"
+         }
+         table.sortable {
+         color:#004d00;
+         }
+         table { 
+         border-collapse: collapse; 
+         }
+         tr:nth-child(n) { 
+         border: solid thin;
+         }
+         #clockdiv{
+         display: inline-block;
+         font-weight: bold;
+         text-align: center;
+         font-size: 18px;
+         padding: 15px 0 15px 0;
+         }
+         #clockdiv > div{
+         display: inline-block;
+         }
+         #clockdiv div > span{
+         display: inline-block;
+         }
+         #clockdiv div > .seconds{
+         margin-left:-3px;
+         }
+         .btn {
+            padding: 3px;
+            font-size:14px;
+         }
+         .disabled{
+         pointer-events: none;
+         /*opacity: 0.5;*/
+         /*display: none;*/
+         }
+         .disabled-and-faded{
+         pointer-events: none;
+         opacity: 0.5;
+         /*display: none;*/
+         }
+         .center {
+         display: block;
+         margin-left: auto;
+         margin-right: auto;
+         }
+         #homeButton{
+         font-size:20px;
+         color:#009933;
+         margin-left:47%;
+         }
+      </style>
+    	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+      <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+      <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+      <!-- Add icon library -->
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      <script type="text/javascript" charset="utf-8">
+         var validCheckInterval, inboxCheckInterval;
+         //var BASE_URL = 'http://' + document.domain + ':' + location.port;
+         var selectTime = null, messageStartTime = null;
+         var messageTime = 0.0;
+         var initTime = new Date();
+         {% if not debug %}
+            var select_time = 10000; // milliseconds
+         {% else %}
+            var select_time = 0;
+         {% endif %}
+         var counter = 0, currentTurn = 0;
+         var selections = [];
+         $(document).ready(function(){
+            window.onbeforeunload = disconnect;
+
+         	$.ajax({
+               url: '{{ url_for('chat.connect')}}',
+               type: "get",
+               data: {"uid": "{{ uid }}" },
+               dataType: "json"
+            });
+            
+            $.ajax({
+               url: '{{ url_for('chat.join_chat')}}',
+               type: "get",
+               data: {"uid": "{{ uid }}"},
+               dataType: "json",
+               success: function(response) {
+                  displayText(response['message']);
+               }
+            });
+         
+         	validCheckInterval = setInterval(pollServer, 3000);
+
+            inboxCheckInterval = setInterval(checkInbox, 1000);
+
+            $('#text').keypress(function(e) {
+               var code = e.keyCode || e.which;
+               if ($('#text').val().length == 0) {
+               messageStartTime = Date.now() / 1000.0;
+               }
+               if (code == 13) {
+                  text = $('#text').val();
+                  $('#text').val('');
+                  var currentTime = Date.now() / 1000.0;
+                  messageTime = currentTime - messageStartTime;
+                  sendMessage(text);
+                  $("#text").attr("disabled", "disabled")
+                  messageStartTime = null;
+                  messageTime = 0.0;
+               }
+            });
+
+         });
+         
+         function makeSelection(selected) {
+            if(counter == 2 * currentTurn + 1) {
+            	if(selectTime == null) {
+            		// if no selection has been made before, log selection and save selection time
+            		now = new Date();
+                  console.log(now - initTime)
+                  if(now - initTime > select_time) {
+                     selectTime = now;
+                     select(selected);
+                  }
+            	}
+            	else {
+            		var currentTime = new Date();
+            		// check if last selection was more than 5 seconds ago; selections can only be made > 10 seconds apart.
+            		// If the last selection was made < 5 seconds ago, do nothing (no selection event is logged).
+            		if ((currentTime - selectTime) > 5000) {
+            			select(selected);
+            			selectTime = currentTime;
+            		} // otherwise do nothing
+            	}
+            }
+         }
+         
+         function displayText(message) {
+         	$('#chat').val($('#chat').val() + message + '\n');
+         	$('#chat').scrollTop($('#chat')[0].scrollHeight);
+         }
+         
+         function displayStatus(message) {
+             $('#status').val(message);
+         }
+         
+         function sendMessage(message) {
+         	$.ajax({
+         		url: '{{ url_for('chat.send_message')}}',
+         		type: "get",
+         		data: {
+         			"uid": "{{ uid }}",
+         			"message": message,
+         			"time_taken": messageTime,
+                  "turn": currentTurn
+         		},
+         		dataType: "json",
+         		success: function(response) {
+         			displayText(response['message']);
+         		}
+         	});
+         }
+
+         function select(selection) {
+         	$.ajax({
+         		url: '{{ url_for('action.select_option')}}',
+         		type: "get",
+         		data: { 
+         			"uid": "{{ uid }}",
+         			"selection": selection,
+                  "turn": currentTurn
+         		},
+         		dataType: "json",
+         		success: function(response) {
+         			displayText(response['message']);
+                  if(selections.length === currentTurn + 1) {
+                     $('#' + selections[currentTurn] + '_marker').attr("visibility", "hidden");
+                  }
+                  $('#' + selection + '_marker').attr("visibility", "visible");
+                  selections[currentTurn] = selection;
+         		}         
+         	});
+         }
+
+         function checkInbox() {
+         	$.ajax({
+         		url: '{{ url_for('chat.check_inbox')}}',
+         		type: "get",
+         		data: { "uid": "{{ uid }}" },
+         		dataType: "json",
+         		success: function(response) {
+         			if(response['received']	) {
+                     if(response['turn_success']) {
+                        setTimeout(function(){ 
+                           displayText(response['message']);
+                           $('#forward_button').removeClass("disabled-and-faded");
+                           $('#fast_forward_button').removeClass("disabled-and-faded");
+                           if(counter == 2 * currentTurn + 1){
+                              $('#info_label').text("");
+                           }
+                           $('#svg_container').css({"outline": "0px dotted green"});
+                           currentTurn++;
+                        }, 1000);
+                     } else if(response['status']) {
+                        displayStatus(response['message'])
+                     } else if ('message' in response) {
+                        $("#text").removeAttr('disabled');
+                        displayText(response['message']);
+                     }
+         			}
+         		}
+         	});
+         }
+         
+         function pollServer() {
+         	$.ajax({
+         		url: '{{ url_for('chat.check_chat_valid')}}',
+         		type: "get",
+         		data: {
+                  "uid": "{{ uid }}",
+                  "turn": currentTurn
+               },
+         		dataType: "json",
+         		success: function(response) {
+         			if(!response['valid']) {
+         				disconnect();
+         				window.location.reload(true);
+         			} else if (response['turn_success']) {
+                     setTimeout(function(){ 
+                        displayText(response['message']);
+                        $('#forward_button').removeClass("disabled-and-faded");
+                        $('#fast_forward_button').removeClass("disabled-and-faded");
+                        if(counter == 2 * currentTurn + 1){
+                           $('#info_label').text("");
+                        }
+                        $('#svg_container').css({"outline": "0px dotted green"});
+                        currentTurn++;
+                     }, 1000);
+                  }
+         		}
+         	});	
+         }
+         
+         function disconnect() {
+            clearInterval(validCheckInterval);
+            clearInterval(inboxCheckInterval);
+            $.ajax({
+               url: '{{ url_for('chat.leave_chat')}}',
+               type: "get",
+               data: {
+                  "uid": "{{ uid }}",
+                  "turn": currentTurn
+               },
+               dataType: "json"
+            });
+            $.ajax({
+               url: '{{ url_for('chat.disconnect')}}',
+               type: "get",
+               data: {"uid": "{{ uid }}" }
+            });
+         }
+                  
+//                  function skipChat() {
+//                   disconnect();
+//                  	$.ajax({
+//                  		url: BASE_URL + '/_skip_chat/',
+//                  		type: "get",
+//                  		data: {"uid": "{{ uid }}"}
+//         	         });			
+//         	         window.location.reload(true);
+//                   }
+
+         function forward() {
+            {% for i in range(9) %}
+               if(counter == {{i}}) {
+                  $('#svg_container').html('{{forward_svgs[i] | safe}}');
+                  if({{i}} % 2 == 0) {
+                     animation_time = {{entity_move_dur_seconds}} * 1000;
+                  } else {
+                     animation_time = {{agent_move_dur_seconds}} * 1000;
+                  }
+                  setTimeout(function(){ 
+                     $('#svg_container').html('{{static_svgs[i + 1] | safe}}');
+                     $('#svg_button_group').removeClass("disabled");
+                     $('#backward_button').removeClass("disabled-and-faded");
+                     $('#fast_backward_button').removeClass("disabled-and-faded");
+                     counter++;
+                     if(counter == 2 * currentTurn + 1) {
+                        $('#forward_button').addClass("disabled-and-faded");
+                        $('#fast_forward_button').addClass("disabled-and-faded");
+                        $('#info_label').text("End of Current Turn");
+                        $('#svg_container').css({"outline": "3px dotted green"});
+                        if(selections.length === currentTurn + 1) {
+                           $('#' + selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                        }
+                     } else {
+                        $('#info_label').text("");
+                     }
+                     if (counter % 2 == 1) {
+                        $('#' + selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                     }
+                  }, animation_time);
+               }
+            {% endfor %}
+            $('#svg_button_group').addClass("disabled");
+            $('#turn_label').text('Turn ' + Math.round((counter + 2) / 2));
+            if (counter % 2 == 0) {
+               $('#info_label').text("(Dots Moving...)");
+            } else {
+               $('#info_label').text("(View Moving...)");
+            }
+         }
+
+         function fastForward() {
+            {% for i in range(9) %}
+               if(counter == {{i}}) {
+                  $('#svg_container').html('{{fast_forward_svgs[i] | safe}}');
+                  if({{i}} % 2 == 0) {
+                     animation_time = {{entity_move_dur_seconds / 2}} * 1000;
+                  } else {
+                     animation_time = {{agent_move_dur_seconds / 2}} * 1000;
+                  }
+                  setTimeout(function(){ 
+                     $('#svg_container').html('{{static_svgs[i + 1] | safe}}');
+                     $('#svg_button_group').removeClass("disabled");
+                     $('#backward_button').removeClass("disabled-and-faded");
+                     $('#fast_backward_button').removeClass("disabled-and-faded");
+                     counter++;
+                     if(counter == 2 * currentTurn + 1) {
+                        $('#forward_button').addClass("disabled-and-faded");
+                        $('#fast_forward_button').addClass("disabled-and-faded");
+                        $('#info_label').text("End of Current Turn");
+                        $('#svg_container').css({"outline": "4px dotted green"});
+                        if(selections.length === currentTurn + 1) {
+                           $('#' + selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                        }
+                     } else {
+                        $('#info_label').text("");
+                     }
+                     if (counter % 2 == 1) {
+                        $('#' + selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                     }
+                  }, animation_time);
+               }
+            {% endfor %}
+            $('#svg_button_group').addClass("disabled");
+            $('#turn_label').text('Turn ' + Math.round((counter + 2) / 2));
+            if (counter % 2 == 0) {
+               $('#info_label').text("(Dots Moving...)");
+            } else {
+               $('#info_label').text("(View Moving...)");
+            }
+         }
+
+         function backward() {
+            {% for i in range(9) %}
+               if(counter == {{i + 1}}) {
+                  $('#svg_container').html('{{backward_svgs[i] | safe}}');
+                  if({{i}} % 2 == 0) {
+                     animation_time = {{backward_entity_move_dur_seconds}} * 1000;
+                  } else {
+                     animation_time = {{backward_agent_move_dur_seconds}} * 1000;
+                  }
+                  setTimeout(function(){
+                     $('#svg_container').html('{{static_svgs[i] | safe}}');
+                     $('#svg_button_group').removeClass("disabled");
+                     $('#forward_button').removeClass("disabled-and-faded");
+                     $('#fast_forward_button').removeClass("disabled-and-faded");
+                     if(counter == 0) {
+                        $('#backward_button').addClass("disabled-and-faded");
+                        $('#fast_backward_button').addClass("disabled-and-faded");
+                     }
+                     if(counter % 2 == 1) {
+                        $('#' + selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                     }
+                  }, animation_time);
+               }
+            {% endfor %}
+            $('#svg_button_group').addClass("disabled");
+            $('#info_label').text("");
+            $('#svg_container').css({"outline": "0px dotted green"});
+            counter--;
+            $('#turn_label').text('Turn ' + Math.round((counter + 1) / 2));
+         }
+
+         function fastBackward() {
+            {% for i in range(9) %}
+               if(counter == {{i + 1}}) {
+                  $('#svg_container').html('{{fast_backward_svgs[i] | safe}}');
+                  if({{i}} % 2 == 0) {
+                     animation_time = {{backward_entity_move_dur_seconds / 2}} * 1000;
+                  } else {
+                     animation_time = {{backward_agent_move_dur_seconds / 2}} * 1000;
+                  }
+                  setTimeout(function(){ 
+                     $('#svg_container').html('{{static_svgs[i] | safe}}');
+                     $('#svg_button_group').removeClass("disabled");
+                     $('#forward_button').removeClass("disabled-and-faded");
+                     $('#fast_forward_button').removeClass("disabled-and-faded");
+                     if(counter == 0) {
+                        $('#backward_button').addClass("disabled-and-faded");
+                        $('#fast_backward_button').addClass("disabled-and-faded");
+                     }
+                     if(counter % 2 == 1) {
+                        $('#' + selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                     }
+                  }, animation_time);
+               }
+            {% endfor %}
+            $('#svg_button_group').addClass("disabled");
+            $('#info_label').text("");
+            $('#svg_container').css({"outline": "0px dotted green"});
+            counter--;
+            $('#turn_label').text('Turn ' + Math.round((counter + 1) / 2));
+         }
+
+      </script>
+
+
+
+   </head>
+   <body onload='init()'>
+      <div class="clearfix">
+         <div id="left_container">
+            <div id="instructions">
+               <h1 style="color:#004d00">{{title}}</h1>
+               <h3>Instructions &nbsp;<button type="button" id="instructionCollapse" class="btn btn-info" data-toggle="collapse"  data-target="#inner">Show/Hide</button></h3>
+            	<div id="inner" class="accordion-body collapse in">
+	               {{ instructions }}
+	            </div>
+            </div>
+            <textarea readonly id="chat"></textarea>
+            <br><br>
+            {% if debug %}
+               <input readonly id="status" style="width:100%;"><br><br>
+            {% endif %}
+            <input id="text" placeholder="Enter your message here"><br><br>
+         </div>
+         <div id="right_container">
+            <div id="your_view">
+               <h3>Your view</h3>
+               <div id="svg_container">
+                  {{static_svgs[0] | safe}}
+               </div>
+               <div id="svg_button_group">
+                  <!--<span id="fast_backward_button" class="svg-button glyphicon glyphicon-fast-backward disabled-and-faded" onclick="fastBackward()" ></span>-->
+                  <span id="backward_button" class="svg-button glyphicon glyphicon-chevron-left disabled-and-faded" onclick="backward()" ></span>
+                  <span id="turn_label">Turn 1</span>
+                  <span id="forward_button" class="svg-button glyphicon glyphicon-step-forward" title="hover text" onclick="forward()" ></span>
+                  <span id="fast_forward_button" class="svg-button glyphicon glyphicon-fast-forward" onclick="fastForward()" ></span>
+               </div>
+               <span id="info_label"></span>
+            </div>
+         </div>
+      </div>
+      <!--
+      <br clear="left">
+      <br>
+      <br>
+      <a id="homeButton" onclick="window.location.href='{{home_url | safe}}';" class="progress_buttons"><i class="fa fa-home"></i> Return Home</a>
+   -->
+   </body>
+</html>

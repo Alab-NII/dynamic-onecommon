@@ -1,0 +1,359 @@
+<html>
+   <head>
+      <title>{{ chat_id }}</title>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+      <style>
+         .clearfix {
+         overflow: auto;
+         }
+         .points {
+         color: #009933;
+         }
+         div#chat_container {
+         float:left;
+         width: 40%;
+         }
+         div#info_container {
+         margin-left: 42%;
+         color:#004d00;
+         }
+         div#icon {
+         padding: 10px 100px 10px 20px;
+         display: inline-block;
+         }
+         textarea#chat {
+         width: 100%;
+         cols: 100;
+         height: 25%;
+         color:#004d00;
+         font-size:14px;
+         }
+         textarea#reject_message {
+         width: 60%;
+         cols: 100;
+         height: 20%;
+         color:#004d00;
+         font-size:14px;
+         }
+         textarea.review_msg {
+         width: 400px;
+         height: 100px;
+         font-size:14px;
+         margin: 10px 0 10px 0;
+         }
+         input#text {
+         width: 100%;
+         }
+         td {
+         padding: 0 15px 0 15px;
+         }
+         #instructions > p,li {
+         font-size:15px;
+         }
+         table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):not(.sorttable_nosort):after {
+         content: " \25B4\25BE"
+         }
+         table.sortable {
+         color:#004d00;
+         }
+         table { 
+         border-collapse: collapse; 
+         margin: 20px;
+         }
+         /*
+         tr:nth-child(n) { 
+         border: solid thin;
+         }
+         */
+         div#svg_button_group {
+         padding: 10px 0px 0px 145px;
+         font-size: 24px;
+         margin-left: 250px;
+         }
+         span#info_label {
+         padding: 15px 0px 0px 145px;
+         color: #606060;
+         font-size: 20px;
+         }
+         .svg-button {
+         color: #337ab7;
+         }
+         .svg-button:hover {
+         color: #23527c;
+         }
+         .review_button {
+         font-size: 15px;
+         margin: 10px;
+         }
+         .disabled{
+         pointer-events: none;
+         /*opacity: 0.5;*/
+         /*display: none;*/
+         }
+         .disabled-and-faded{
+         pointer-events: none;
+         opacity: 0.5;
+         /*display: none;*/
+         }
+         #svg_container {
+         width: 430px;
+         margin: 0 40px 0 40px;
+         }
+         #partner_svg_container {
+         width: 430px;
+         margin: 0 40px 0 40px;
+         }
+         #agent_0_utterances {
+         width: 430px;
+         margin: 0 40px 0 40px;
+         font-size: 16px;
+         }
+         #agent_1_utterances {
+         width: 430px;
+         margin: 0 40px 0 40px;
+         font-size: 16px;
+         }
+      </style>
+      <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script> 
+      <script>
+         var counter = 0, currentTurn = {{current_turn}};
+         var annotated_selections = {{annotated_selections | safe}};
+         var agent_0_utterances = {{agent_0_utterances | safe}};
+         var agent_1_utterances = {{agent_1_utterances | safe}};
+
+         function makeSelection(selection) {
+            turn = Math.round((counter - 1) / 2);
+            $.ajax({
+               url: '{{ url_for('annotation.select_target')}}',
+               type: "get",
+               data: { 
+                  "chat_id": "{{ chat_id }}",
+                  "sample_agent_id": "{{ sample_agent_id }}",
+                  "annotator_id": "{{ annotator_id }}",
+                  "selection": selection,
+                  "turn": turn
+               },
+               dataType: "json",
+               success: function(response) {
+                  if(annotated_selections.length >= turn + 1) {
+                     $('#' + annotated_selections[turn] + '_marker').attr("visibility", "hidden");
+                  } else {
+                     if(turn + 1 > currentTurn) {
+                        if(turn + 1 <= {{max_turns}}) {
+                           currentTurn = turn + 1;
+                           $('#forward_button').removeClass("disabled-and-faded");
+                           $('#fast_forward_button').removeClass("disabled-and-faded");
+                        }
+                     }
+                  }
+                  $('#' + selection + '_marker').attr("visibility", "visible");
+                  annotated_selections[turn] = selection;
+               }         
+            });
+         }
+
+         function forward() {
+            {% for i in range(9) %}
+               if(counter == {{i}}) {
+                  $('#svg_container').html('{{agent_forward_svgs[i] | safe}}');
+                  if({{i}} % 2 == 0) {
+                     animation_time = {{entity_move_dur_seconds}} * 1000;
+                  } else {
+                     animation_time = {{agent_move_dur_seconds}} * 1000;
+                  }
+                  setTimeout(function(){ 
+                     $('#svg_container').html('{{agent_static_svgs[i + 1] | safe}}');
+                     $('#svg_button_group').removeClass("disabled");
+                     $('#backward_button').removeClass("disabled-and-faded");
+                     $('#fast_backward_button').removeClass("disabled-and-faded");
+                     counter++;
+                     if(counter == 2 * currentTurn + 1) {
+                        $('#forward_button').addClass("disabled-and-faded");
+                        $('#fast_forward_button').addClass("disabled-and-faded");
+                     }
+                     if (counter % 2 == 1 && annotated_selections.length >= Math.round((counter + 1) / 2)) {
+                        $('#' + annotated_selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                        $('')
+                     }
+                  }, animation_time);
+               }
+            {% endfor %}
+            $('#svg_button_group').addClass("disabled");
+            $('#turn_label').text('Turn ' + Math.round((counter + 2) / 2));
+            if (counter % 2 == 1 && agent_0_utterances.length >= Math.round((counter + 3) / 2)) {
+               $('#agent_0_utterances').html(agent_0_utterances[Math.round((counter + 1) / 2)]);
+            }
+            if (counter % 2 == 1 && agent_1_utterances.length >= Math.round((counter + 3) / 2)) {
+               $('#agent_1_utterances').html(agent_1_utterances[Math.round((counter + 1) / 2)]);
+            }
+         }
+
+         function fastForward() {
+            {% for i in range(9) %}
+               if(counter == {{i}}) {
+                  $('#svg_container').html('{{agent_fast_forward_svgs[i] | safe}}');
+                  if({{i}} % 2 == 0) {
+                     animation_time = {{entity_move_dur_seconds / 2}} * 1000;
+                  } else {
+                     animation_time = {{agent_move_dur_seconds / 2}} * 1000;
+                  }
+                  setTimeout(function(){ 
+                     $('#svg_container').html('{{agent_static_svgs[i + 1] | safe}}');
+                     $('#svg_button_group').removeClass("disabled");
+                     $('#backward_button').removeClass("disabled-and-faded");
+                     $('#fast_backward_button').removeClass("disabled-and-faded");
+                     counter++;
+                     if(counter == 2 * currentTurn + 1) {
+                        $('#forward_button').addClass("disabled-and-faded");
+                        $('#fast_forward_button').addClass("disabled-and-faded");
+                     }
+                     if (counter % 2 == 1 && annotated_selections.length >= Math.round((counter + 1) / 2)) {
+                        $('#' + annotated_selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                     }
+                  }, animation_time);
+               }
+            {% endfor %}
+            $('#svg_button_group').addClass("disabled");
+            $('#turn_label').text('Turn ' + Math.round((counter + 2) / 2));
+            if (counter % 2 == 1 && agent_0_utterances.length >= Math.round((counter + 3) / 2)) {
+               $('#agent_0_utterances').html(agent_0_utterances[Math.round((counter + 1) / 2)]);
+            }
+            if (counter % 2 == 1 && agent_1_utterances.length >= Math.round((counter + 3) / 2)) {
+               $('#agent_1_utterances').html(agent_1_utterances[Math.round((counter + 1) / 2)]);
+            }
+         }
+
+         function backward() {
+            {% for i in range(9) %}
+               if(counter == {{i + 1}}) {
+                  $('#svg_container').html('{{agent_backward_svgs[i] | safe}}');
+                  if({{i}} % 2 == 0) {
+                     animation_time = {{backward_entity_move_dur_seconds}} * 1000;
+                  } else {
+                     animation_time = {{backward_agent_move_dur_seconds}} * 1000;
+                  }
+                  setTimeout(function(){
+                     $('#svg_container').html('{{agent_static_svgs[i] | safe}}');
+                     $('#svg_button_group').removeClass("disabled");
+                     $('#forward_button').removeClass("disabled-and-faded");
+                     $('#fast_forward_button').removeClass("disabled-and-faded");
+                     if(counter == 0) {
+                        $('#backward_button').addClass("disabled-and-faded");
+                        $('#fast_backward_button').addClass("disabled-and-faded");
+                     }
+                     if (counter % 2 == 1 && annotated_selections.length >= Math.round((counter + 1) / 2)) {
+                        $('#' + annotated_selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                     }
+                     if (counter % 2 == 1 && agent_0_utterances.length >= Math.round((counter + 1) / 2)) {
+                        $('#agent_0_utterances').html(agent_0_utterances[Math.round((counter - 1) / 2)]);
+                     }
+                     if (counter % 2 == 1 && agent_1_utterances.length >= Math.round((counter + 1) / 2)) {
+                        $('#agent_1_utterances').html(agent_1_utterances[Math.round((counter - 1) / 2)]);
+                     }
+                  }, animation_time);
+               }
+            {% endfor %}
+            $('#svg_button_group').addClass("disabled");
+            counter--;
+            $('#turn_label').text('Turn ' + Math.round((counter + 1) / 2));
+         }
+
+         function fastBackward() {
+            {% for i in range(9) %}
+               if(counter == {{i + 1}}) {
+                  $('#svg_container').html('{{agent_fast_backward_svgs[i] | safe}}');
+                  if({{i}} % 2 == 0) {
+                     animation_time = {{backward_entity_move_dur_seconds / 2}} * 1000;
+                  } else {
+                     animation_time = {{backward_agent_move_dur_seconds / 2}} * 1000;
+                  }
+                  setTimeout(function(){ 
+                     $('#svg_container').html('{{agent_static_svgs[i] | safe}}');
+                     $('#svg_button_group').removeClass("disabled");
+                     $('#forward_button').removeClass("disabled-and-faded");
+                     $('#fast_forward_button').removeClass("disabled-and-faded");
+                     if(counter == 0) {
+                        $('#backward_button').addClass("disabled-and-faded");
+                        $('#fast_backward_button').addClass("disabled-and-faded");
+                     }
+                     if (counter % 2 == 1 && annotated_selections.length >= Math.round((counter + 1) / 2)) {
+                        $('#' + annotated_selections[Math.round((counter - 1) / 2)] + '_marker').attr("visibility", "visible");
+                     }
+                     if (counter % 2 == 1 && agent_0_utterances.length >= Math.round((counter + 1) / 2)) {
+                        $('#agent_0_utterances').html(agent_0_utterances[Math.round((counter - 1) / 2)]);
+                     }
+                     if (counter % 2 == 1 && agent_1_utterances.length >= Math.round((counter + 1) / 2)) {
+                        $('#agent_1_utterances').html(agent_1_utterances[Math.round((counter - 1) / 2)]);
+                     }
+                  }, animation_time);
+               }
+            {% endfor %}
+            $('#svg_button_group').addClass("disabled");
+            counter--;
+            $('#turn_label').text('Turn ' + Math.round((counter + 1) / 2));
+         }
+
+      </script>
+   </head>
+   <body>
+            <!--
+            <textarea id="reject_message">{{message}}</textarea>
+            -->
+            <table>
+                 <tr>
+                     <td style="font-size:22px; text-align:center; width: 430px; margin: 0 40px 0 40px;">A's View</td>
+                     <td style="font-size:22px; text-align:center; width: 430px; margin: 0 40px 0 40px;">B's View</td>
+                 </tr>
+                     <td>
+                     {% if sample_agent_id == 0 %}
+                     <div id="svg_container">
+                        {{agent_static_svgs[0] | safe}}
+                     </div>
+                     {% else %}
+                     <div id="partner_svg_container">
+                     </div>
+                     {% endif %}
+                     </td>
+                     <td>
+                     {% if sample_agent_id == 0 %}
+                     <div id="partner_svg_container">
+                     </div>
+                     {% else %}
+                     <div id="svg_container">
+                        {{agent_static_svgs[0] | safe}}
+                     </div>
+                     {% endif %}
+                     </td>
+                 </tr>
+                 <tr style="height: 300px">
+                     <td>
+                        <div id="agent_0_utterances" style="text-align: top;">
+                           {{agent_0_utterances[0] | safe}}
+                        </div>
+                     </td>
+                     <td>
+                        <div id="agent_1_utterances" style="text-align: top;">
+                           {{agent_1_utterances[0] | safe}}
+                        </div>
+                     </td>
+                 </tr>
+                 <tr>
+                     <td colspan="2">
+                        <div id="svg_button_group">
+                           <!--<span id="fast_backward_button" class="svg-button glyphicon glyphicon-fast-backward disabled-and-faded" onclick="fastBackward()" ></span>-->
+                           <span id="backward_button" class="svg-button glyphicon glyphicon-chevron-left disabled-and-faded" onclick="backward()" ></span>
+                           <span id="turn_label">Turn 1</span>
+                           <span id="forward_button" class="svg-button glyphicon glyphicon-step-forward" title="hover text" onclick="forward()" ></span>
+                           <span id="fast_forward_button" class="svg-button glyphicon glyphicon-fast-forward" onclick="fastForward()" ></span>
+                        </div>
+                     </td>
+                 </tr>
+            </table>
+            <br>
+   </body>
+</html>

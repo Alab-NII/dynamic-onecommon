@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script type="text/javascript" charset="utf-8">
+		var counter = 0;
+
+		function makeSelection(selected) {{
+			$('#entity_id').text(selected);
+		}}
+
+		function next() {{
+			if(counter == 0) {{
+				$('#svg_container').html('{move_1}');
+			}}
+			if(counter == 1) {{
+				$('#svg_container').html('{move_2}');
+			}}
+			if(counter == 2) {{
+				$('#svg_container').html('{move_3}');
+			}}
+			if(counter == 3) {{
+				$('#svg_container').html('{move_4}');
+			}}
+			if(counter == 4) {{
+				$('#svg_container').html('{move_5}');
+			}}
+			if(counter == 5) {{
+				$('#svg_container').html('{move_6}');
+			}}
+			if(counter == 6) {{
+				$('#svg_container').html('{move_7}');
+			}}
+			if(counter == 7) {{
+				$('#svg_container').html('{move_8}');
+			}}
+			if(counter == 8) {{
+				$('#svg_container').html('{move_9}');
+			}}
+			counter++;
+		}}
+
+		function previous() {{
+			if(counter == 1) {{
+				$('#svg_container').html('{reverse_move_1}');
+			}}
+			if(counter == 2) {{
+				$('#svg_container').html('{reverse_move_2}');
+			}}
+			if(counter == 3) {{
+				$('#svg_container').html('{reverse_move_3}');
+			}}
+			if(counter == 4) {{
+				$('#svg_container').html('{reverse_move_4}');
+			}}
+			if(counter == 5) {{
+				$('#svg_container').html('{reverse_move_5}');
+			}}
+			if(counter == 6) {{
+				$('#svg_container').html('{reverse_move_6}');
+			}}
+			if(counter == 7) {{
+				$('#svg_container').html('{reverse_move_7}');
+			}}
+			if(counter == 8) {{
+				$('#svg_container').html('{reverse_move_8}');
+			}}
+			if(counter == 9) {{
+				$('#svg_container').html('{reverse_move_9}');
+			}}
+			counter--;
+		}}
+
+	</script>
+</head>
+<body>
+ 	<button type="button" id="nextAnimation" onclick="next()">Next</button>
+ 	<button type="button" id="previousAnimation" onclick="previous()">Previous</button>
+ 	<span id="entity_id"></span>
+ 	<table>
+        <tr>
+            <th>World View</th>
+        </tr>
+        <tr>
+            <td>
+		 		<div id="svg_container">
+					{init}
+				</div>
+			</td>
+        </tr>
+    </table>
+</body>
+</html>

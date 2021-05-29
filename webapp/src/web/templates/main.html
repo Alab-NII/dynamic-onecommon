@@ -1,0 +1,158 @@
+<html>
+   <head>
+      <title>{{ title }}</title>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+      <style>
+         .clearfix {
+         overflow: auto;
+         }
+         div#left_container {
+         float:left;
+         width: 80%;
+         padding: 0px 5px 0px 15px;
+         }
+         div#right_container {
+         margin-left: 20%;
+         color:#004d00;
+         padding: 0px 15px 0px 5px;
+         }
+         div#footnote_container {
+         text-align: left;
+         padding: 10px;
+         }
+         div#icon {
+         padding: 10px 100px 10px 20px;
+         display: inline-block;
+         }
+         div#svg_button_group {
+         padding: 10px 0px 0px 125px;
+         font-size: 24px;
+         }
+         .svg-button {
+         color: #337ab7;
+         }
+         .svg-button:hover {
+         color: #23527c;
+         }
+         #turn_label {
+         color: black;
+         }
+         textarea#chat {
+         width: 100%;
+         cols: 100;
+         height: 25%;
+         color:#004d00;
+         font-size:14px;
+         }
+         input#text {
+         width: 100%;
+         }
+         td {
+         padding: 0 15px 0 15px;
+         }
+         #instructions > p,li {
+         font-size:15px;
+         }
+         table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):not(.sorttable_nosort):after {
+         content: " \25B4\25BE"
+         }
+         table.sortable {
+         color:#004d00;
+         }
+         table { 
+         border-collapse: collapse; 
+         }
+         tr:nth-child(n) { 
+         border: solid thin;
+         }
+         #clockdiv{
+         display: inline-block;
+         font-weight: bold;
+         text-align: center;
+         font-size: 18px;
+         padding: 15px 0 15px 0;
+         }
+         #clockdiv > div{
+         display: inline-block;
+         }
+         #clockdiv div > span{
+         display: inline-block;
+         }
+         #clockdiv div > .seconds{
+         margin-left:-3px;
+         }
+         .disabled{
+         pointer-events: none;
+         /*opacity: 0.5;*/
+         /*display: none;*/
+         }
+         .disabled-and-faded{
+         pointer-events: none;
+         opacity: 0.5;
+         /*display: none;*/
+         }
+         .center {
+           display: block;
+           margin-left: auto;
+           margin-right: auto;
+         }
+         li {
+         font-size:17px;
+         }
+      </style>
+    	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+      <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+      <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+      <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+      <script type="text/javascript" charset="utf-8">
+         $(document).ready(function(){
+            {% if not enable_chat %}
+               $('#chat_room').addClass("disabled-and-faded");
+            {% endif %}
+         });
+      </script>
+   </head>
+   <body onload='init()' oncopy="return false" oncut="return false" onpaste="return false">
+      <div class="clearfix">
+         <div id="left_container">
+            <div id="instructions">
+               <h1 style="color:#004d00">{{title}}</h1>
+               <h3>Welcome!</h3>
+               <p style="font-size:18px;">
+               In this game, you and your partner will be shown different parts of a grid with multiple dots. <br>
+               At each turn, the dots (and your view) will move randomly on the grid.<br>
+               Your goal is to chat with your partner to <b>find a common dot</b> at the end of each turn.</p>
+               <div id="tutorial">
+                  <h3><a href="{{tutorial_link}}" style="color:#009933"><i class='fas fa-book-reader'></i> Take Tutorial</a></h3>
+                  <p style="font-size:18px;">
+                     If you are new to this HIT, <u>please take this tutorial first</u> (4 pages with animation). <br>
+                     It is critical that you read, understand and follow all the instructions very carefully!</p>
+               </div>
+               <div id="chat_room">
+                  <h3><a href="{{chat_link}}" style="color:#009933"><i class='fas fa-comment-dots'></i> Start Chat!</a></h3>
+                  <p style="font-size:18px;">
+                  If you've understood how the game works, let's start playing!<br>
+                  You will be rewarded based on the number of <u>successful turns</u>.</p>
+                  <ul>
+                       <li>2 turns: $0.50 </li>
+                       <li>3 turns: $0.75 + $0.05 </li>
+                       <li>4 turns: $1.00 + $0.10 </li>
+                       <li>5 turns: $1.25 + $0.25 </li>
+                  </ul>
+                  <p style="font-size:18px;">
+                  Please be aware that we review all dialogues carefully and judge acceptance based on <b>dialogue quality</b>.<br>
+                  <u>Your bonus may not be provided</u> or <u>your HIT may not be accepted</u> if you do not follow all instructions carefully.</p>
+               </div>
+         </div>
+      </div>
+      <br clear="left">
+         <br>
+         <div id="footnote_container">
+            <p style="font-size:16px;"><i class='fas fa-exclamation-triangle'></i> Some browser may not play our animations properly (e.g. Firefox).<br>
+                  If you face any trouble, please try using a different browser (e.g. Google Chrome, Safari). </p>
+         </div>
+   </body>
+</html>

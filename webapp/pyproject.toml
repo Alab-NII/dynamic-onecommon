@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "dynamic-onecommon-webapp"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+flask = "^1.1.2"
+numpy = "^1.19.0"
+gevent = "^20.6.2"
+flask_socketio = "^4.3.1"
+editdistance = "^0.5.3"
+fuzzywuzzy = "^0.18.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
