@@ -6,6 +6,10 @@ This is the repository for our paper [Maintaining Common Ground in Dynamic Envir
   <img src="figures/first_example.png" width="720"/>
 </p>
 
+<p align="center">
+  <img src="figures/dynamic_onecommon.gif" width="540"/>
+</p>
+
 # Setup
 
 Install and activate [pyenv](https://github.com/pyenv/pyenv).
