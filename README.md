@@ -3,11 +3,7 @@
 This is the repository for our paper, [Maintaining Common Ground in Dynamic Environments](https://arxiv.org/abs/2105.14207) (Udagawa and Aizawa, TACL 2021).
 
 <p align="center">
-  <img src="figures/first_example.png" width="720"/>
-</p>
-
-<p align="center">
-  <img src="figures/dynamic_onecommon.gif" width="540"/>
+  <img src="figures/dynamic_onecommon.gif" width="720"/>
 </p>
 
 # Setup
